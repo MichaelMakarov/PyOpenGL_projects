@@ -10,7 +10,7 @@ wndHeight = 300                     # window height
 wndInitPos = (100, 100)             # window init position relative left top corner
 wndTitle = b"3D graphics app"
 # colors
-colAmbient = (1.0, 1.0, 1.0, 1.0)
+colAmbient = (1.0, 1.0, 0.0, 1.0)
 colGreen = (0.2, 0.8, 0.2, 1.0)
 colRed = (0.8, 0.2, 0.2, 1.0)
 colBlue = (0.8, 0.2, 0.8, 1.0)
@@ -19,7 +19,9 @@ colClear = (0.0, 0.9, 0.9, 1.0)     # default color of the window
 rotX = 0                            # rotation around x axis in degrees
 rotY = 0                            # rotation around y axis in degrees
 drawRect = (-6.0, 6.0, -6.0, 6.0)   # a rectangle will be drawn
-posLight = (5.0, 5.0, -1.0)
+R = 7
+angle = 0.0
+posLight = [R * np.sin(angle), R * np.cos(angle), -1.0]
 
 # initializing scene parameters
 def Init() :
@@ -30,12 +32,20 @@ def Init() :
     gl.glClearDepth(1.0)
     gl.glEnable(gl.GL_DEPTH_TEST)
     gl.glDepthFunc(gl.GL_LEQUAL)
-    #glu.gluOrtho2D(drawRect[0], drawRect[1], drawRect[2], drawRect[3])
     # specifying lighting
     gl.glEnable(gl.GL_LIGHTING)
     gl.glEnable(gl.GL_LIGHT0)
     gl.glLightModelfv(gl.GL_LIGHT_MODEL_AMBIENT, colAmbient)
     gl.glLightfv(gl.GL_LIGHT0, gl.GL_POSITION, posLight)
+
+def LightRot() :
+    global angle, posLight, R
+    angle += 0.005
+    if angle > 2 * np.pi : angle -= 2 * np.pi
+    elif angle < 2 * np.pi : angle += 2 * np.pi
+    posLight[0] = R * np.cos(angle)
+    posLight[2] = R * np.sin(angle)
+    glut.glutPostRedisplay()
 
 # processing the window resizing
 def WndResize(width, height) :
@@ -92,10 +102,11 @@ def DrawSphere(position, radius, color, polyn = (50, 50)) :
     
 # draw function
 def WndDraw() :
-    global rotX, rotY, posLight, colGreen, colBlue, colRed
+    global rotX, rotY, posLight, colGreen, colBlue, colRed, posLight
     # drawing the scene
     # cleaning color buffer and depth buffer
     gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT)
+    gl.glLightfv(gl.GL_LIGHT0, gl.GL_POSITION, posLight)
     # specifying objects
     gl.glPushMatrix()
     gl.glRotatef(rotX, 1.0, 0.0, 0.0)   # rotation around x
@@ -122,6 +133,6 @@ glut.glutDisplayFunc(WndDraw)
 glut.glutSpecialFunc(WndInput)
 glut.glutReshapeFunc(WndResize)
 Init()
-#glut.glutIdleFunc(WndDraw)
+glut.glutIdleFunc(LightRot)
 glut.glutMainLoop()
 
